@@ -4,4 +4,4 @@ package com.example.myapp.models
 "name": "Developer Test",
 "email": "developer@salequick.com",*/
 
-data class UserData(val id:String, val name:String, val email:String)
+data class UserData(val id:String, val name:String?, val email:String)

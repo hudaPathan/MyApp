@@ -1,6 +1,8 @@
 package com.example.myapp
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -38,16 +40,17 @@ class LoginActivity : AppCompatActivity() {
 
         }
 
-
+    val intent1= Intent(this,UserDetails::class.java)
         edtEmail= findViewById(R.id.Email)
         edtPassword= findViewById(R.id.Password)
 
         btLogin.setOnClickListener {
-            val email = edtEmail.text.toString()
+            val username = edtEmail.text.toString()
             val password = edtPassword.text.toString()
+            val ip="192.168.1.1"
 
 
-            if (email.isEmpty()) {
+            if (username.isEmpty()) {
                 edtEmail.error = "Email required"
                 edtEmail.requestFocus();
                 return@setOnClickListener
@@ -57,7 +60,7 @@ class LoginActivity : AppCompatActivity() {
                 edtPassword.requestFocus();
                 return@setOnClickListener
             }
-            RetrofitClient.instance.login(email, password).enqueue(object : Callback<LoginResponse>{
+            RetrofitClient.instance.login(username, password,ip ).enqueue(object : Callback<LoginResponse>{
                 override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                     Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
                 }
@@ -67,9 +70,22 @@ class LoginActivity : AppCompatActivity() {
                 ) {
                         if (response.body()?.status==200)
                         {
-                            Toast.makeText(applicationContext, "status: "+response.body()?.status.toString(), Toast.LENGTH_LONG).show()
-                            Toast.makeText(applicationContext, "success Message"+response.body()?.successMsg.toString(), Toast.LENGTH_LONG).show()
 
+                            if (response.body()?.UserData?.id.isNullOrEmpty())
+                        {
+                            Toast.makeText(applicationContext, "Wrong Credentials", Toast.LENGTH_LONG).show()
+                        }
+                            else
+                        {
+                            Toast.makeText(applicationContext, "Logged In Successfully as:"+response.body()?.UserData?.name.toString(), Toast.LENGTH_LONG).show()
+                            saveMerchantId(this@LoginActivity,response.body()?.UserData?.id.toString(), response.body()?.UserData?.name.toString())
+                           // Toast.makeText(applicationContext, "From Shared Prefrence: "+ getMerchantId(this@LoginActivity), Toast.LENGTH_LONG).show()
+
+                            startActivity(intent1)
+
+
+
+                        }
                         }
                     else
                         {
@@ -79,4 +95,19 @@ class LoginActivity : AppCompatActivity() {
             })
         }
     }
+
+
+    fun saveMerchantId(context: Context, merchantId: String, name: String) {
+        // Get the SharedPreferences instance
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+        // Edit the SharedPreferences to save the value
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        editor.putString("merchant_id", merchantId)
+        editor.putString("name", name)
+
+        // Apply changes asynchronously
+        editor.apply()
+    }
+
+
 }
